@@ -1,0 +1,213 @@
+@startuml
+
+'polyline
+skinparam linetype ortho
+title WEBCOM 3.3
+
+class Person <<abstract>> {
+     # first_name: String
+     # last_name: String
+     # address: Address
+     # apartment_number: String
+     # {static} create() -> Person
+     # delete()
+}
+
+class Customer <<abstract>> {
+    # id : Int
+    # contract : Contract
+    # account : Account
+    + delete()
+}
+
+class RegualrCustomer {
+    - contact : ContactData
+    + {static} create() -> RegualrCustomer
+    + delete()
+}
+
+class BusinessCustomer {
+    - name: string
+    - company_id: string
+    + {static} create() -> BusinessCustomer
+    + delete()
+}
+
+class Account {
+    - balance : Money
+    - number : String
+    + {static} create(number,balance) -> Account
+    + pay()
+    + remove()
+}
+
+class Contract <<abstract>> {
+    # approval_date : date
+    # termination_time : integer {abstract}
+    # duration: int {abstract}
+    # status: String
+    + current_addendum: Addendum
+    + {static} create()
+    + delete()
+}
+
+note right of Contract::status
+    "Active"
+    "Suspended"
+end note
+
+class RegularContract {
+    - pay_term=30: int
+    - {static} contract_termination_time=10 : Int
+    - termination_time : integer { >= contract_termination_time}
+    + {static} create()
+    + delete()
+}
+
+class BusinessContract {
+    - pay_term=60: int
+    - {static} contract_termination_time=30 : Int
+    - termination_time : integer { >= contract_termination_time}
+    + {static} create()
+    + delete()
+}
+
+class ExpiringContract {
+    - termination_date: datetime
+    - duration: int
+}
+
+class NonExpiringContract {
+    - duration: int
+}
+
+class ContactData{
+    - email : String
+    - phone_number : String
+    - first_name : String[0..1]
+    - last_name : String[0..1]
+    + {static} create()
+    + delete()
+}
+
+class Address {
+    - street : String
+    - city : String
+    - postal_code : string
+    + {static} create()
+    + delete()
+}
+
+class Service {
+    - name : String {unique}
+    - /price : Money
+    - {static} all : Service[1..*]
+    + {static} create()
+    + delete()
+}
+Service "*" o-- "*" Service : {unique inclusion}
+
+class Addendum {
+    - date_created: date
+    + {static} init() -> Addendum
+    + {static} create()
+    + delete()
+}
+
+class Employee <<abstract>> {
+    # salary: Money { cannot decrease more than 50% }
+    # seniority: int
+    # /bonus: Money {abstract}
+    + {static} init() -> Employee
+}
+
+class TechnicalEmployee <<abstract>> {
+
+}
+
+class RegularEmployee <<abstract>> {
+    - workexperience_description : str
+    - softskills_description : str
+}
+
+class ClientManager {
+    - /bonus: Money
+    + {static} create()
+    + delete()
+
+}
+
+class Accountant {
+    - /bonus: Money
+    + {static} create()
+    + delete()
+}
+
+class Technician {
+    # /bonus: Money
+    + {static} create()
+    + delete()
+}
+
+class SysAdmin {
+    # /bonus: Money
+}
+
+class Device <<abstract>>{
+     - model: String
+     - manufacturer: String
+}
+
+class Router {
+    + {static} create()
+    + delete()
+}
+
+class Server {
+    + {static} create()
+    + delete()
+}
+
+class Laptop {
+    + {static} create()
+    + delete()
+}
+
+' Inheritance tree
+Contract <|-- RegularContract : customer-type based
+Contract <|-- BusinessContract : customer-type based
+Contract <|-- ExpiringContract : duration-type based
+Contract <|-- NonExpiringContract : duration-type based
+Person  <|-- RegualrCustomer
+Customer <|--  RegualrCustomer
+Customer <|-- BusinessCustomer
+Person <|-- Employee
+Employee <|-- TechnicalEmployee
+Employee <|-- RegularEmployee
+TechnicalEmployee <|-- Technician : <<dynamic>>
+TechnicalEmployee <|-- SysAdmin : <<dynamic>>
+RegularEmployee <|-- ClientManager
+RegularEmployee <|-- Accountant
+Device <|-- Router
+Device <|-- Laptop
+Device <|-- Server
+
+' Association tree
+' Address <-> Person
+Address "1"--"*" Person
+' ContactData <-> Customer
+ContactData "1"--"1" Customer
+Account "0..1" --*  Customer
+Contract "0..1" --*  Customer
+Addendum "*" o-- "*" Service
+ContactData "1" -- "1" Employee
+
+together {
+    Contract "0..1" -- "*" Addendum : date_created
+
+
+    Contract "0..1" -- "0..1" Addendum : < is current of <-- {subset}
+}
+Technician "*" -- "*" Device : > fixes <<history>>
+
+@enduml

@@ -1,0 +1,304 @@
+@startuml
+skinparam linetype ortho
+
+class ContactDataMixin <<abstract>>{
+    - email : str
+    - phone_number : str
+}
+
+class Address {
+    - id: int {unique}
+    + {static} objects
+    - street : str
+    - city : str
+    - postal_code : string
+    + {static} create()
+    + delete()
+    + save()
+}
+
+class Account {
+    - id: int {unique}
+    + {static} objects
+    - balance : Money
+    - number : str
+    + {static} create()
+    + delete()
+    + save()
+}
+
+class Contract {
+    - id: int {unique}
+    + {static} objects
+    # approval_date : datetime
+    # termination_date: datetime [0..1]
+    # {abstract} termination_delay : int
+    # status: str
+    # duration_type: str
+    + current_addendum: Addendum
+    + pay()
+    # duration(): datetime
+    + save()
+}
+
+note left of Contract::status
+    "Active"
+    "Suspended"
+end note
+
+note left of Contract::duration_type
+    "EXPIRABLE"
+    "NONEXPIRABLE"
+end note
+
+class RegularContract {
+    - id: int {unique}
+    + {static} objects
+    - pay_term=30: int
+    - {static} regular_contract_termination_delay=10: int
+    - termination_delay : int { >= regular_contract_termination_delay}
+    + {static} create()
+    + delete()
+    + save()
+}
+
+class BusinessContract {
+    - id: int {unique}
+    + {static} objects
+    - pay_term=60: int
+    - {static} business_contract_termination_delay=30 : int
+    - termination_delay : int { >= business_contract_termination_delay}
+    + {static} create()
+    + delete()
+    + save()
+}
+
+
+
+class Person <<abstract>> {
+     # first_name: str
+     # last_name: str
+     # apartment_number: str
+}
+
+class Customer {
+    - id: int {unique}
+    + {static} objects
+    + {static} create()
+    + delete()
+    + {static} get_regular_customers()
+    + {static} get_business_customers()
+    + save()
+}
+
+class RegularCustomer <<extension>> {
+    - id: int {unique}
+    + {static} objects
+    + {static} create()
+    + delete()
+    + save()
+}
+
+class BusinessCustomer <<extension>> {
+    - id: int {unique}
+    + {static} objects
+    - name: str
+    - company_id: str
+    + {static} create()
+    + delete()
+    + save()
+}
+
+class Employee <<abstract>> {
+    - id: int {unique}
+    # salary: Money { cannot decrease more than 50% }
+    # seniority: int
+    + {static} create() -> Employee
+    + delete()
+    + bonus(): Money {abstract}
+}
+
+class TechnicalEmployee {
+    - id: int {unique}
+    + {static} objects
+    - employee_type: str
+    + {static} create(): TechnicalEmployee
+    + instance: {SysAdmin xor Technician}
+    + save()
+}
+
+note left of TechnicalEmployee::employee_type
+    "TECHNICIAN"
+    "SYSADMIN"
+end note
+
+class Technician <<extension>> {
+    - id: int {unique}
+    + {static} objects
+    # bonus(): Money
+    + {static} create()
+    + delete()
+    + save()
+}
+
+class SysAdmin <<extension>> {
+    - id: int {unique}
+    + {static} objects
+    # bonus(): Money
+    + {static} create()
+    + delete()
+    + save()
+}
+
+class RegularEmployee <<abstract>> {
+    + {static} objects
+    - workexperience_description : str
+    - softskills_description : str
+}
+
+class ClientManager {
+    - id: int {unique}
+    + {static} objects
+    # bonus(): Money
+    + {static} create()
+    + delete()
+    + save()
+}
+
+class Accountant {
+    - id: int {unique}
+    + {static} objects
+    # bonus(): Money
+    + {static} create()
+    + delete()
+    + save()
+}
+
+
+class Service {
+    - id: int {unique}
+    + {static} objects
+    - name : String {unique}
+    - price : Money
+    + {static} total_price(): Money
+    + {static} create()
+    + delete()
+    + save()
+}
+Service "*" o-- "*" Service : {unique inclusion}
+
+class Addendum {
+    - id: int {unique}
+    + {static} objects
+    - date_created: date
+    + {static} create()
+    + delete()
+    + save()
+}
+
+class Device <<abstract>> {
+    model : str
+    manufacturer: str
+    + save()
+}
+
+class Router {
+    - id: int {unique}
+    + {static} objects
+    + {static} create()
+    + delete()
+}
+
+class Server {
+    - id: int {unique}
+    + {static} objects
+    + {static} create()
+    + delete()
+}
+
+class Laptop {
+    - id: int {unique}
+    + {static} objects
+    + {static} create()
+    + delete()
+}
+
+together {
+    class RegularCustomer
+    class BusinessCustomer
+}
+
+class Repair <<abstract>> {
+    datetime_repaired : datetime
+    + save()
+}
+
+class RouterRepair {
+    - id: int {unique}
+    + {static} objects
+    + {static} create()
+    + delete()
+}
+
+class LaptopRepair {
+    - id: int {unique}
+    + {static} objects
+    + {static} create()
+    + delete()
+}
+
+class ServerRepair {
+    - id: int {unique}
+    + {static} objects
+    + {static} create()
+    + delete()
+}
+
+Person "*" -- "1" Address
+Customer "1" -- "0..1" Contract
+Customer "1" -- "0..1" Account
+Customer "1" -- "0..1" RegularCustomer
+Customer "1" -- "0..1" BusinessCustomer
+Addendum "*" -- "*" Service
+RegularContract "0..1" -- "*" Addendum
+BusinessContract "0..1" -- "*" Addendum
+
+Device <|-- Laptop
+Device <|-- Server
+Device <|-- Router
+
+Repair <|-- RouterRepair
+Repair <|-- LaptopRepair
+Repair <|-- ServerRepair
+
+
+Person <|-- RegularCustomer
+Contract <|-- RegularContract
+Contract <|-- BusinessContract
+
+ContactDataMixin <|-- Employee
+ContactDataMixin <|-- Customer
+
+Person <|-- Employee
+Employee <|-- TechnicalEmployee
+Employee <|-- RegularEmployee
+RegularEmployee <|-- ClientManager
+RegularEmployee <|-- Accountant
+
+LaptopRepair "*" -- "1" Technician
+ServerRepair "*" -- "1" Technician
+RouterRepair "*" -- "1" Technician
+
+Router "1" -- "*" RouterRepair
+Laptop "1" -- "*" LaptopRepair
+Server "1" -- "*" ServerRepair
+
+
+TechnicalEmployee "1" -- "0..1" Technician : <<dynamic>>
+TechnicalEmployee "1" -- "0..1" SysAdmin : <<dynamic>>
+
+
+
+
+
+@enduml
