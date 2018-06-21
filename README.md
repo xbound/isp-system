@@ -43,7 +43,7 @@ Run tests:
 ```shell
 python manage.py test
 ```
-Run server and navigate to [http://127.0.0.1/admin](http://127.0.0.1/admin). You will need to create and admin user to log in.
+Run server and navigate to [http://127.0.0.1:8000/admin](http://127.0.0.1:8000/admin). You will need to create and admin user to log in.
 ```shell
 python manage.py createsuperuser
 ```
